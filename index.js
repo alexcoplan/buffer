@@ -7,14 +7,14 @@
 var oneHz = Math.PI*2;
 
 // global vars
-var notes = [440,550,660,770];
+var notes = [440,550,660,880,770,660,550,440,330];
 var clockCache = 0;
 var frequency = 440;
-var pulseCounter = new Counter(16);
+var pulseCounter = new Counter(8);
 var noteCounter = new Counter(notes.length);
 var BPM = 120;
 var beatFreq = BPM/60;
-var delayUnit = new Delay(11000,.8,.4);
+var delayUnit = new Delay(11128,.8,.6);
 
 function Counter(upto) { // counts from 0 -> upto - 1
   this.n = upto;
@@ -49,7 +49,9 @@ Delay.prototype.process = function(sample) {
  * rising => implies rising clock edge */
 function tick(rising) {
   //frequency = (frequency === 440) ? 550 : 440;
-  if (rising) pulseCounter.count(); // ticks every 1/32 beat
+  if (rising) {
+    if (pulseCounter.count() === 0) noteCounter.count(); // ticks every 1/32 beat
+  }
 }
 
 export function dsp(t) {
@@ -58,13 +60,10 @@ export function dsp(t) {
   clockCache = clock;
   
   var amplitude = 0;
-  
-  if (pulseCounter.i === pulseCounter.n - 1) {
-    noteCounter.count();
-  }
+
   if (pulseCounter.i < 6) {
     amplitude = 0.3;
   }
   
-  return delayUnit.process(amplitude * Math.sin(440*oneHz*t));
+  return delayUnit.process(amplitude * Math.sin(notes[noteCounter.i]*oneHz*t));
 }
