@@ -65,7 +65,7 @@ Delay.prototype.process = function(sample) {
 }
 
 /* to be called on every clock edge
- * rising => implies rising clock edge */
+ * rising => rising clock edge */
 function tick(rising) {
   if (rising) {
     if (pulseCounter.count() === 0) noteCounter.count(); // ticks clockDivision times per beat
