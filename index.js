@@ -9,7 +9,7 @@ var oneHz = Math.PI*2;
 // general paremeters
 var clockDivisions = 16; // ticks per beat
 var pulseFreq = 1;
-var BPM = 220;
+var BPM = 120;
 var notes = [440,525,660,880,770,660,525,495, 330, 385];
 var oscillatorAmplitude = 0.4;
 var noteDuration = 0.375; // duration of pulses, in beats
@@ -75,7 +75,8 @@ Delay.prototype.process = function(sample) {
  * rising => rising clock edge */
 function tick(rising) {
   if (rising) {
-    if (pulseCounter.count() === 0) noteCounter.count(); // ticks clockDivision times per beat
+    // this code is executed clockDivision times per beat
+    if (pulseCounter.count() === 0) noteCounter.count();
   }
 }
 
