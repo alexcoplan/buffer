@@ -86,5 +86,6 @@ export function dsp(t) {
     amplitude = decreaseTo(amplitude,1.0/smoothing,0);
   }
   
-  return delayUnit.process(amplitude * Math.sin(1*notes[noteCounter.i]*oneHz*t));
+  return delayUnit.process(amplitude * (0.5 * Math.sin(0.5*notes[noteCounter.i]*oneHz*t) +
+        0.5 * Math.sin(notes[(noteCounter.i + 4) % noteCounter.n]*oneHz*t)));
 }
