@@ -80,10 +80,10 @@ export function dsp(t) {
   var smoothing = 250.0;
 
   if (pulseCounter.i < 6) {
-    amplitude = increaseTo(amplitude,1.0/smoothing,oscillatorAmplitude); // increase to 0.3 in intervals of 0.01
+    amplitude = increaseTo(amplitude,1.0/smoothing,oscillatorAmplitude);
   }
   else {
-    amplitude = decreaseTo(amplitude,1.0/smoothing,0); // decrease to 0 in intervals of 0.01
+    amplitude = decreaseTo(amplitude,1.0/smoothing,0);
   }
   
   return delayUnit.process(amplitude * Math.sin(1*notes[noteCounter.i]*oneHz*t));
