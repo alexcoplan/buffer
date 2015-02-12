@@ -5,6 +5,8 @@
 
 // constants
 var oneHz = Math.PI*2;
+
+// general paremeters
 var clockDivisions = 16; // ticks per beat
 var pulseFreq = 1;
 var BPM = 220;
@@ -43,6 +45,10 @@ function Counter(upto) { // counts from 0 -> upto - 1
 Counter.prototype.count = function() {
   this.i = (this.i+1) % this.n;
   return this.i;
+}
+
+Counter.prototype.plus = function(x) {
+  return (this.i + x) % this.n;
 }
 
 function Delay(beatsDelay, mix, feedback) {
@@ -86,6 +92,8 @@ export function dsp(t) {
     amplitude = decreaseTo(amplitude,1.0/smoothing,0);
   }
   
-  return delayUnit.process(amplitude * (0.5 * Math.sin(0.5*notes[noteCounter.i]*oneHz*t) +
-        0.5 * Math.sin(notes[(noteCounter.i + 4) % noteCounter.n]*oneHz*t)));
+  var signal = amplitude * (0.5 * Math.sin(0.5*notes[noteCounter.i]*oneHz*t)
+                          + 0.5 * Math.sin(notes[noteCounter.plus(4)]*oneHz*t));
+  
+  return delayUnit.process(signal);
 }
