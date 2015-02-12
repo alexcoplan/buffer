@@ -12,6 +12,7 @@ var pulseFreq = 1;
 var BPM = 220;
 var notes = [440,525,660,880,770,660,525,495, 330, 385];
 var oscillatorAmplitude = 0.4;
+var noteDuration = 0.375; // duration of pulses, in beats
 
 // delay parameters
 var delayMix = 1.0;
@@ -83,17 +84,21 @@ export function dsp(t) {
   if (clock !== clockCache) tick(clock); // ticks 2*clockDivisions every beat
   clockCache = clock;
   
-  var smoothing = 250.0;
+  // each pulse should have a linear envelope
+  // which attacks for 0.5*smoothing samples
+  // and decays for smoothing samples
+  var smoothing = 250.0,
+      smoothingInterval = oscillatorAmplitude/smoothing;
 
-  if (pulseCounter.i < 6) {
-    amplitude = increaseTo(amplitude,1.0/smoothing,oscillatorAmplitude);
+  if (pulseCounter.i < Math.round(noteDuration * clockDivisions)) {
+    amplitude = increaseTo(amplitude, smoothingInterval*2, oscillatorAmplitude);
   }
   else {
-    amplitude = decreaseTo(amplitude,1.0/smoothing,0);
+    amplitude = decreaseTo(amplitude, smoothingInterval, 0);
   }
   
-  var signal = amplitude * (0.5 * Math.sin(0.5*notes[noteCounter.i]*oneHz*t)
-                          + 0.5 * Math.sin(notes[noteCounter.plus(4)]*oneHz*t));
+  var signal = amplitude * (0.4 * Math.sin(0.5*notes[noteCounter.i]*oneHz*t)
+                          + 0.6 * Math.sin(notes[noteCounter.plus(4)]*oneHz*t));
   
   return delayUnit.process(signal);
 }
