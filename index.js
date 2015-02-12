@@ -5,16 +5,24 @@
 
 // constants
 var oneHz = Math.PI*2;
+var clockDivisions = 16; // ticks per beat
+var pulseFreq = 1;
+var BPM = 220;
+var notes = [440,525,660,880,770,660,525,495, 330, 385];
+var oscillatorAmplitude = 0.4;
+
+// delay parameters
+var delayMix = 1.0;
+var delayFeedback = 0.6;
+var beatsToDelay = 0.5;
 
 // global vars
-var notes = [440,550,660,880,770,660,550,495,330];
 var clockCache = 0;
 var frequency = 440;
-var pulseCounter = new Counter(16);
+var pulseCounter = new Counter(pulseFreq * clockDivisions);
 var noteCounter = new Counter(notes.length);
-var BPM = 120;
 var beatFreq = BPM/60;
-var delayUnit = new Delay(11128,.8,.6);
+var delayUnit = new Delay(beatsToDelay,delayMix,delayFeedback);
 var amplitude = 0;
 
 function increaseTo(source, interval, target) {
@@ -37,11 +45,11 @@ Counter.prototype.count = function() {
   return this.i;
 }
 
-function Delay(samples, mix, feedback) {
-  this.numSamples = samples;
+function Delay(beatsDelay, mix, feedback) {
+  this.numSamples = Math.round(beatsDelay * sampleRate/beatFreq);
   this.mix = mix;
   this.feedback = feedback;
-  this.counter = new Counter(samples);
+  this.counter = new Counter(this.numSamples);
   this.buffer = [];
   for (var i = 0; i < this.numSamples; i++) {
     this.buffer.push(0.0);
@@ -59,23 +67,24 @@ Delay.prototype.process = function(sample) {
 /* to be called on every clock edge
  * rising => implies rising clock edge */
 function tick(rising) {
-  //frequency = (frequency === 440) ? 550 : 440;
   if (rising) {
-    if (pulseCounter.count() === 0) noteCounter.count(); // ticks every 1/32 beat
+    if (pulseCounter.count() === 0) noteCounter.count(); // ticks clockDivision times per beat
   }
 }
 
 export function dsp(t) {
-  var clock = Math.sin(16*beatFreq*oneHz*t) > 0; // ticks every 1/64 beat
-  if (clock !== clockCache) tick(clock); // clock = 1 => rising clock edge
+  var clock = Math.sin(clockDivisions*beatFreq*oneHz*t) > 0;
+  if (clock !== clockCache) tick(clock); // ticks 2*clockDivisions every beat
   clockCache = clock;
+  
+  var smoothing = 250.0;
 
   if (pulseCounter.i < 6) {
-    amplitude = increaseTo(amplitude,0.005,0.4); // increase to 0.3 in intervals of 0.01
+    amplitude = increaseTo(amplitude,1.0/smoothing,oscillatorAmplitude); // increase to 0.3 in intervals of 0.01
   }
   else {
-    amplitude = decreaseTo(amplitude,0.005,0); // decrease to 0 in intervals of 0.01
+    amplitude = decreaseTo(amplitude,1.0/smoothing,0); // decrease to 0 in intervals of 0.01
   }
   
-  return delayUnit.process(amplitude * Math.sin(notes[noteCounter.i]*oneHz*t));
+  return delayUnit.process(amplitude * Math.sin(1*notes[noteCounter.i]*oneHz*t));
 }
