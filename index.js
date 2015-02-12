@@ -7,12 +7,14 @@
 var oneHz = Math.PI*2;
 
 // global vars
+var notes = [440,550,660,770];
 var clockCache = 0;
 var frequency = 440;
-var pulseCounter = new Counter(32);
+var pulseCounter = new Counter(16);
+var noteCounter = new Counter(notes.length);
 var BPM = 120;
 var beatFreq = BPM/60;
-var delayUnit = new Delay(4,0.8,0);
+var delayUnit = new Delay(11000,.8,.4);
 
 function Counter(upto) { // counts from 0 -> upto - 1
   this.n = upto;
@@ -24,10 +26,11 @@ Counter.prototype.count = function() {
   return this.i;
 }
 
-function Delay(division, mix, feedback) {
-  this.numSamples = Math.round(sampleRate / (division*beatFreq*4));
+function Delay(samples, mix, feedback) {
+  this.numSamples = samples;
   this.mix = mix;
   this.feedback = feedback;
+  this.counter = new Counter(samples);
   this.buffer = [];
   for (var i = 0; i < this.numSamples; i++) {
     this.buffer.push(0.0);
@@ -35,9 +38,10 @@ function Delay(division, mix, feedback) {
 }
 
 Delay.prototype.process = function(sample) {
-  var delay = this,
-      delayed = delay.buffer.pop();
-  delay.buffer.unshift(sample + delay.feedback*delayed);
+  var writeTo = this.counter.i,
+      delay = this,
+      delayed = delay.buffer[this.counter.count()];
+  delay.buffer[writeTo] = sample + delay.feedback*delayed;
   return sample + delay.mix*delayed;
 }
 
@@ -55,9 +59,12 @@ export function dsp(t) {
   
   var amplitude = 0;
   
+  if (pulseCounter.i === pulseCounter.n - 1) {
+    noteCounter.count();
+  }
   if (pulseCounter.i < 6) {
-    amplitude = 1.0;
+    amplitude = 0.3;
   }
   
-  return delayUnit.process(amplitude * Math.sin(frequency*oneHz*t));
+  return delayUnit.process(amplitude * Math.sin(440*oneHz*t));
 }
